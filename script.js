@@ -4,7 +4,8 @@ class QRGeneratorPro {
         this.selectedType = '';
         this.qrData = '';
         this.customization = {
-            pattern: 'square',
+            pattern: 'default',
+            cornerStyle: 'default',
             fgColor: '#000000',
             bgColor: '#ffffff',
             size: 400,
@@ -188,48 +189,54 @@ class QRGeneratorPro {
             }, { passive: true });
         });
 
-        // Pattern selection
-        document.querySelectorAll('.pattern-option').forEach(option => {
-            option.addEventListener('click', () => {
-                this.selectPattern(option.dataset.pattern);
-            }, { passive: true });
-        });
-
         // Color inputs with debouncing
         let colorTimeout;
-        document.getElementById('fg-color').addEventListener('change', (e) => {
-            clearTimeout(colorTimeout);
-            colorTimeout = setTimeout(() => {
-                this.customization.fgColor = e.target.value;
-                this.ensureLogoColor();
-            }, 100);
-        });
+        const fgColorInput = document.getElementById('fg-color');
+        if (fgColorInput) {
+            fgColorInput.addEventListener('change', (e) => {
+                clearTimeout(colorTimeout);
+                colorTimeout = setTimeout(() => {
+                    this.customization.fgColor = e.target.value;
+                    this.ensureLogoColor();
+                }, 100);
+            });
+        }
 
-        document.getElementById('bg-color').addEventListener('change', (e) => {
-            clearTimeout(colorTimeout);
-            colorTimeout = setTimeout(() => {
-                this.customization.bgColor = e.target.value;
-                this.ensureLogoColor();
-            }, 100);
-        });
+        const bgColorInput = document.getElementById('bg-color');
+        if (bgColorInput) {
+            bgColorInput.addEventListener('change', (e) => {
+                clearTimeout(colorTimeout);
+                colorTimeout = setTimeout(() => {
+                    this.customization.bgColor = e.target.value;
+                    this.ensureLogoColor();
+                }, 100);
+            });
+        }
 
         // Size slider with throttling
         const sizeSlider = document.getElementById('size-slider');
         const sizeValue = document.getElementById('size-value');
         let sizeTimeout;
 
-        sizeSlider.addEventListener('input', (e) => {
-            clearTimeout(sizeTimeout);
-            sizeTimeout = setTimeout(() => {
-                this.customization.size = parseInt(e.target.value);
-                sizeValue.textContent = `${this.customization.size}px`;
-            }, 50);
-        }, { passive: true });
+        if (sizeSlider) {
+            sizeSlider.addEventListener('input', (e) => {
+                clearTimeout(sizeTimeout);
+                sizeTimeout = setTimeout(() => {
+                    this.customization.size = parseInt(e.target.value);
+                    if (sizeValue) sizeValue.textContent = `${this.customization.size}px`;
+                }, 50);
+            }, { passive: true });
+        }
 
         // Logo upload
-        document.getElementById('logo-upload').addEventListener('change', (e) => {
-            this.handleLogoUpload(e);
-        });
+        const logoUpload = document.getElementById('logo-upload');
+        if (logoUpload) {
+            logoUpload.addEventListener('change', (e) => {
+                this.handleLogoUpload(e);
+            });
+        }
+
+
 
         // Optimize scroll performance
         this.optimizeScrolling();
@@ -257,10 +264,74 @@ class QRGeneratorPro {
             card.classList.toggle('selected', card.dataset.type === type);
         });
 
+        // Update UI text based on barcode vs QR selection
+        this.updateUIForType(type);
+
         // Auto-advance to next page after selection
         setTimeout(() => {
             this.goToPage(2);
         }, 300);
+    }
+
+    updateUIForType(type) {
+        const isBarcode = type === 'barcode';
+
+        // Update customize button text
+        const customizeBtnText = document.getElementById('customize-btn-text');
+        if (customizeBtnText) {
+            customizeBtnText.textContent = isBarcode ? 'Customize Barcode' : 'Customize QR';
+        }
+
+        // Update page 3 title
+        const customizeTitle = document.getElementById('customize-title');
+        if (customizeTitle) {
+            customizeTitle.textContent = isBarcode ? 'Customize Barcode' : 'Customize QR Code';
+        }
+
+        // Update page 3 subtitle
+        const customizeSubtitle = document.getElementById('customize-subtitle');
+        if (customizeSubtitle) {
+            customizeSubtitle.textContent = isBarcode ? 'Adjust barcode appearance' : 'Choose style and appearance';
+        }
+
+        // Update generate button text
+        const generateBtnText = document.getElementById('generate-btn-text');
+        if (generateBtnText) {
+            generateBtnText.textContent = isBarcode ? 'Generate Barcode' : 'Generate QR Code';
+        }
+
+        // Update result page title
+        const resultTitle = document.getElementById('result-title');
+        if (resultTitle) {
+            resultTitle.textContent = isBarcode ? 'Your Barcode' : 'Your QR Code';
+        }
+
+        // Update result page subtitle
+        const resultSubtitle = document.getElementById('result-subtitle');
+        if (resultSubtitle) {
+            resultSubtitle.textContent = isBarcode ? 'Ready to download and use' : 'Ready to download and share';
+        }
+
+        // Update new code button text
+        const newCodeBtnText = document.getElementById('new-code-btn-text');
+        if (newCodeBtnText) {
+            newCodeBtnText.textContent = isBarcode ? 'New Barcode' : 'New QR';
+        }
+
+        // Hide/show QR-specific options for barcode
+        const patternGroup = document.getElementById('pattern-option-group');
+        const cornerGroup = document.getElementById('corner-option-group');
+        const logoGroup = document.getElementById('logo-option-group');
+
+        if (patternGroup) {
+            patternGroup.style.display = isBarcode ? 'none' : 'block';
+        }
+        if (cornerGroup) {
+            cornerGroup.style.display = isBarcode ? 'none' : 'block';
+        }
+        if (logoGroup) {
+            logoGroup.style.display = isBarcode ? 'none' : 'block';
+        }
     }
 
     selectPattern(pattern) {
@@ -305,7 +376,8 @@ class QRGeneratorPro {
     }
 
     updatePageIndicator() {
-        const stepNames = ['Choose Type', 'Enter Data', 'Customize', 'Your QR Code'];
+        const isBarcode = this.selectedType === 'barcode';
+        const stepNames = ['Choose Type', 'Enter Data', isBarcode ? 'Customize Barcode' : 'Customize', isBarcode ? 'Your Barcode' : 'Your QR Code'];
         const currentStepEl = document.getElementById('current-step');
         const stepNumberEl = document.getElementById('step-number');
 
@@ -422,9 +494,313 @@ class QRGeneratorPro {
                     </div>
                 `;
                 break;
+
+            case 'location':
+                title.textContent = 'Location';
+                subtitle.textContent = 'Enter GPS coordinates';
+                html = `
+                    <div class="form-group">
+                        <label for="location-lat">Latitude *</label>
+                        <input type="number" step="any" id="location-lat" class="form-input" placeholder="12.9716° N" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location-lng">Longitude *</label>
+                        <input type="number" step="any" id="location-lng" class="form-input" placeholder="77.5946° E" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location-name">Location Name (Optional)</label>
+                        <input type="text" id="location-name" class="form-input" placeholder="My Place" maxlength="100">
+                    </div>
+
+                `;
+                break;
+
+            case 'sms':
+                title.textContent = 'SMS Message';
+                subtitle.textContent = 'Create a pre-filled text message';
+                html = `
+                    <div class="form-group">
+                        <label for="sms-phone">Phone Number *</label>
+                        <input type="tel" id="sms-phone" class="form-input" placeholder="+91 9876543210" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sms-message">Message</label>
+                        <textarea id="sms-message" class="form-input" rows="4" placeholder="Type your message here..." maxlength="160"></textarea>
+                    </div>
+                    <div class="char-counter"><span id="sms-count">0</span>/160 characters</div>
+                `;
+                break;
+
+            case 'upi':
+                title.textContent = 'UPI Payment';
+                subtitle.textContent = 'Indian UPI payment QR';
+                html = `
+                    <div class="form-group">
+                        <label for="upi-app">UPI App</label>
+                        <select id="upi-app" class="form-input">
+                            <option value="">Any UPI App</option>
+                            <option value="gpay">Google Pay</option>
+                            <option value="paytm">Paytm</option>
+                            <option value="phonepe">PhonePe</option>
+                            <option value="bhim">BHIM</option>
+                            <option value="amazonpay">Amazon Pay</option>
+                            <option value="whatsapp">WhatsApp Pay</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="upi-id">UPI ID *</label>
+                        <input type="text" id="upi-id" class="form-input" placeholder="yourname@upi" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="upi-name">Payee Name</label>
+                        <input type="text" id="upi-name" class="form-input" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="upi-amount">Amount (₹)</label>
+                        <input type="number" id="upi-amount" class="form-input" placeholder="100.00" min="1" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="upi-note">Payment Note</label>
+                        <input type="text" id="upi-note" class="form-input" placeholder="Payment for..." maxlength="50">
+                    </div>
+                `;
+                break;
+
+            case 'social':
+                title.textContent = 'Social Media';
+                subtitle.textContent = 'Link your social profile';
+                html = `
+                    <div class="form-group">
+                        <label for="social-platform">Platform *</label>
+                        <select id="social-platform" class="form-input" onchange="qrGenerator.updateSocialHint()">
+                            <option value="instagram">Instagram</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="twitter">X (Twitter)</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="threads">Threads</option>
+                            <option value="snapchat">Snapchat</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="other">Other Website</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="social-input">Username / Handle *</label>
+                        <input type="text" id="social-input" class="form-input" placeholder="username" required>
+                        <small id="social-hint" style="margin-top:5px; display:block; color:#718096; font-size:12px;">Enter your Instagram username (without @)</small>
+                    </div>
+                `;
+                break;
+
+            case 'bank':
+                title.textContent = 'Bank Transfer';
+                subtitle.textContent = 'Account transfer details';
+                html = `
+                    <div class="form-group">
+                        <label for="bank-region">Region</label>
+                        <select id="bank-region" class="form-input" onchange="qrGenerator.updateBankFields()">
+                            <option value="india">India (IFSC)</option>
+                            <option value="international">International (SWIFT)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bank-name">Bank Name *</label>
+                        <select id="bank-name" class="form-input">
+                            <option value="">Select Bank</option>
+                            <option value="sbi">State Bank of India</option>
+                            <option value="hdfc">HDFC Bank</option>
+                            <option value="icici">ICICI Bank</option>
+                            <option value="axis">Axis Bank</option>
+                            <option value="kotak">Kotak Mahindra</option>
+                            <option value="pnb">Punjab National Bank</option>
+                            <option value="bob">Bank of Baroda</option>
+                            <option value="canara">Canara Bank</option>
+                            <option value="union">Union Bank</option>
+                            <option value="idbi">IDBI Bank</option>
+                            <option value="yes">Yes Bank</option>
+                            <option value="indusind">IndusInd Bank</option>
+                            <option value="federal">Federal Bank</option>
+                            <option value="rbl">RBL Bank</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bank-beneficiary">Beneficiary Name *</label>
+                        <input type="text" id="bank-beneficiary" class="form-input" placeholder="Account holder name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bank-account">Account Number *</label>
+                        <input type="text" id="bank-account" class="form-input" placeholder="1234567890" required>
+                    </div>
+                    <div class="form-group" id="bank-ifsc-group">
+                        <label for="bank-ifsc">IFSC Code *</label>
+                        <input type="text" id="bank-ifsc" class="form-input" placeholder="SBIN0001234" maxlength="11">
+                    </div>
+                    <div class="form-group" id="bank-swift-group" style="display:none;">
+                        <label for="bank-swift">SWIFT/BIC Code</label>
+                        <input type="text" id="bank-swift" class="form-input" placeholder="SBININBBXXX" maxlength="11">
+                    </div>
+                    <div class="form-group">
+                        <label for="bank-amount">Amount</label>
+                        <input type="number" id="bank-amount" class="form-input" placeholder="1000.00" min="1" step="0.01">
+                    </div>
+                `;
+                break;
+
+            case 'event':
+                title.textContent = 'Event / Booking';
+                subtitle.textContent = 'Create calendar event';
+                html = `
+                    <div class="form-group">
+                        <label for="event-title">Event Title *</label>
+                        <input type="text" id="event-title" class="form-input" placeholder="Meeting with Team" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-location">Location</label>
+                        <input type="text" id="event-location" class="form-input" placeholder="Conference Room A">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event-start-date">Start Date *</label>
+                            <input type="date" id="event-start-date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-start-time">Start Time *</label>
+                            <input type="time" id="event-start-time" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="event-end-date">End Date *</label>
+                            <input type="date" id="event-end-date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="event-end-time">End Time *</label>
+                            <input type="time" id="event-end-time" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-description">Description</label>
+                        <textarea id="event-description" class="form-input" rows="3" placeholder="Event details..." maxlength="200"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-reminder">Reminder</label>
+                        <select id="event-reminder" class="form-input">
+                            <option value="0">No reminder</option>
+                            <option value="15">15 minutes before</option>
+                            <option value="30">30 minutes before</option>
+                            <option value="60">1 hour before</option>
+                            <option value="1440">1 day before</option>
+                        </select>
+                    </div>
+                `;
+                break;
+
+            case 'crypto':
+                title.textContent = 'Crypto Payment';
+                subtitle.textContent = 'Cryptocurrency payment address';
+                html = `
+                    <div class="form-group">
+                        <label for="crypto-coin">Cryptocurrency *</label>
+                        <select id="crypto-coin" class="form-input" onchange="qrGenerator.updateCryptoFields()">
+                            <option value="bitcoin">Bitcoin (BTC)</option>
+                            <option value="ethereum">Ethereum (ETH)</option>
+                            <option value="litecoin">Litecoin (LTC)</option>
+                            <option value="dogecoin">Dogecoin (DOGE)</option>
+                            <option value="ripple">Ripple (XRP)</option>
+                            <option value="cardano">Cardano (ADA)</option>
+                            <option value="solana">Solana (SOL)</option>
+                            <option value="polygon">Polygon (MATIC)</option>
+                            <option value="usdt">Tether (USDT)</option>
+                            <option value="usdc">USD Coin (USDC)</option>
+                        </select>
+                    </div>
+                    <div class="crypto-info" id="crypto-info">
+                        <i class="fab fa-bitcoin"></i>
+                        <span>Bitcoin Network</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="crypto-address">Wallet Address *</label>
+                        <input type="text" id="crypto-address" class="form-input" placeholder="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="crypto-amount">Amount (Optional)</label>
+                        <input type="number" id="crypto-amount" class="form-input" placeholder="0.001" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label for="crypto-label">Label (Optional)</label>
+                        <input type="text" id="crypto-label" class="form-input" placeholder="Payment for services" maxlength="50">
+                    </div>
+                `;
+                break;
+
+            case 'barcode':
+                title.textContent = 'Barcode Generator';
+                subtitle.textContent = 'Create product barcode';
+                html = `
+                    <div class="form-group">
+                        <label for="barcode-format">Barcode Format *</label>
+                        <select id="barcode-format" class="form-input">
+                            <option value="CODE128">Code 128 (General)</option>
+                            <option value="EAN13">EAN-13 (Products)</option>
+                            <option value="EAN8">EAN-8 (Small Products)</option>
+                            <option value="UPC">UPC-A (US Products)</option>
+                            <option value="CODE39">Code 39 (Alphanumeric)</option>
+                            <option value="ITF14">ITF-14 (Shipping)</option>
+                            <option value="MSI">MSI (Inventory)</option>
+                            <option value="pharmacode">Pharmacode (Pharma)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="barcode-data">Barcode Data *</label>
+                        <input type="text" id="barcode-data" class="form-input" placeholder="123456789012" required>
+                    </div>
+                    <div class="barcode-help" id="barcode-help">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Code 128: Any alphanumeric text</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="barcode-text">Display Text (Optional)</label>
+                        <input type="text" id="barcode-text" class="form-input" placeholder="Custom text below barcode">
+                    </div>
+                    <div class="form-group">
+                        <label for="barcode-height">Barcode Height</label>
+                        <input type="range" id="barcode-height" class="form-input" min="50" max="150" value="100">
+                        <span id="barcode-height-value">100px</span>
+                    </div>
+                `;
+                break;
         }
 
         container.innerHTML = html;
+
+        // Bind event listeners for barcode height slider
+        if (this.selectedType === 'barcode') {
+            setTimeout(() => {
+                const heightSlider = document.getElementById('barcode-height');
+                const heightValue = document.getElementById('barcode-height-value');
+                if (heightSlider && heightValue) {
+                    heightSlider.addEventListener('input', () => {
+                        heightValue.textContent = heightSlider.value + 'px';
+                    });
+                }
+            }, 100);
+        }
+
+        // Bind SMS character counter
+        if (this.selectedType === 'sms') {
+            setTimeout(() => {
+                const smsMessage = document.getElementById('sms-message');
+                const smsCount = document.getElementById('sms-count');
+                if (smsMessage && smsCount) {
+                    smsMessage.addEventListener('input', () => {
+                        smsCount.textContent = smsMessage.value.length;
+                    });
+                }
+            }, 100);
+        }
     }
 
     collectInputData() {
@@ -451,6 +827,30 @@ class QRGeneratorPro {
 
             case 'wifi':
                 return this.generateWiFi();
+
+            case 'location':
+                return this.generateLocation();
+
+            case 'sms':
+                return this.generateSMS();
+
+            case 'upi':
+                return this.generateUPI();
+
+            case 'social':
+                return this.generateSocial();
+
+            case 'bank':
+                return this.generateBank();
+
+            case 'event':
+                return this.generateEvent();
+
+            case 'crypto':
+                return this.generateCrypto();
+
+            case 'barcode':
+                return this.generateBarcode();
 
             default:
                 return '';
@@ -552,6 +952,321 @@ class QRGeneratorPro {
         return str.replace(/([\\";,:])/g, '\\$1');
     }
 
+    generateLocation() {
+        const lat = document.getElementById('location-lat').value.trim();
+        const lng = document.getElementById('location-lng').value.trim();
+        const name = document.getElementById('location-name').value.trim();
+
+        if (!lat || !lng) return '';
+
+        // Standard geo URI format
+        let geo = `geo:${lat},${lng}`;
+        if (name) {
+            geo += `?q=${encodeURIComponent(name)}`;
+        }
+
+        console.log('Generated Location:', geo);
+        return geo;
+    }
+
+
+
+    updateSocialHint() {
+        const platform = document.getElementById('social-platform').value;
+        const hint = document.getElementById('social-hint');
+        const input = document.getElementById('social-input');
+        const label = document.querySelector('label[for="social-input"]');
+
+        switch (platform) {
+            case 'instagram':
+                label.textContent = 'Username *';
+                input.placeholder = 'username';
+                hint.textContent = 'Enter Instagram username (e.g. johndoe)';
+                break;
+            case 'facebook':
+                label.textContent = 'Profile ID / Username *';
+                input.placeholder = 'johndoe123';
+                hint.textContent = 'Enter Facebook username or profile ID';
+                break;
+            case 'twitter':
+                label.textContent = 'Handle *';
+                input.placeholder = 'johndoe';
+                hint.textContent = 'Enter X handle without @';
+                break;
+            case 'linkedin':
+                label.textContent = 'Profile / Company URL *';
+                input.placeholder = 'in/johndoe';
+                hint.textContent = 'Enter your LinkedIn profile slug (e.g. in/johndoe)';
+                break;
+            case 'youtube':
+                label.textContent = 'Channel Handle / URL *';
+                input.placeholder = '@ChannelName';
+                hint.textContent = 'Enter channel handle (e.g. @TechReview)';
+                break;
+            case 'threads':
+                label.textContent = 'Username *';
+                input.placeholder = 'username';
+                hint.textContent = 'Enter Threads username';
+                break;
+            case 'whatsapp':
+                label.textContent = 'Phone Number (with Code) *';
+                input.placeholder = '919876543210';
+                hint.textContent = 'Enter number with country code, no + symbol (e.g. 919876543210)';
+                break;
+            case 'telegram':
+                label.textContent = 'Username *';
+                input.placeholder = 'username';
+                hint.textContent = 'Enter Telegram username';
+                break;
+            case 'other':
+                label.textContent = 'Full Link *';
+                input.placeholder = 'https://mysite.com';
+                hint.textContent = 'Enter the full profile URL';
+                break;
+            default:
+                label.textContent = 'Username *';
+                input.placeholder = 'username';
+                hint.textContent = 'Enter username';
+        }
+    }
+
+    generateSocial() {
+        const platform = document.getElementById('social-platform').value;
+        let input = document.getElementById('social-input').value.trim();
+
+        if (!input) return '';
+
+        // Clean input (remove @, remove spaces)
+        if (platform !== 'other' && platform !== 'linkedin' && platform !== 'youtube') {
+            input = input.replace(/@/g, '').replace(/\s/g, '');
+        }
+
+        let url = '';
+        switch (platform) {
+            case 'instagram': url = `https://instagram.com/${input}`; break;
+            case 'facebook': url = `https://facebook.com/${input}`; break;
+            case 'twitter': url = `https://x.com/${input}`; break;
+            case 'linkedin':
+                if (!input.includes('linkedin.com')) url = `https://linkedin.com/${input}`;
+                else url = input;
+                break;
+            case 'youtube':
+                if (input.startsWith('http')) url = input;
+                else url = `https://youtube.com/${input}`;
+                break;
+            case 'threads': url = `https://www.threads.net/@${input}`; break;
+            case 'snapchat': url = `https://www.snapchat.com/add/${input}`; break;
+            case 'tiktok': url = `https://www.tiktok.com/@${input}`; break;
+            case 'whatsapp': url = `https://wa.me/${input}`; break;
+            case 'telegram': url = `https://t.me/${input}`; break;
+            case 'other':
+                url = input.startsWith('http') ? input : `https://${input}`;
+                break;
+            default: url = input;
+        }
+
+        console.log('Generated Social URL:', url);
+        return url;
+    }
+
+    generateSMS() {
+        const phone = document.getElementById('sms-phone').value.trim();
+        const message = document.getElementById('sms-message').value.trim();
+
+        if (!phone) return '';
+
+        // SMSTO format (widely supported)
+        let sms = `smsto:${phone}`;
+        if (message) {
+            sms += `:${message}`;
+        }
+
+        console.log('Generated SMS:', sms);
+        return sms;
+    }
+
+    generateUPI() {
+        const upiId = document.getElementById('upi-id').value.trim();
+        const name = document.getElementById('upi-name').value.trim();
+        const amount = document.getElementById('upi-amount').value.trim();
+        const note = document.getElementById('upi-note').value.trim();
+
+        if (!upiId) return '';
+
+        // UPI Payment URI format (Indian standard)
+        let upi = `upi://pay?pa=${encodeURIComponent(upiId)}`;
+
+        if (name) {
+            upi += `&pn=${encodeURIComponent(name)}`;
+        }
+
+        if (amount) {
+            upi += `&am=${amount}`;
+        }
+        if (note) {
+            upi += `&tn=${encodeURIComponent(note)}`;
+        }
+        upi += '&cu=INR'; // Currency
+
+        console.log('Generated UPI:', upi);
+        return upi;
+    }
+
+    updateBankFields() {
+        const region = document.getElementById('bank-region').value;
+        const ifscGroup = document.getElementById('bank-ifsc-group');
+        const swiftGroup = document.getElementById('bank-swift-group');
+
+        if (region === 'india') {
+            ifscGroup.style.display = 'block';
+            swiftGroup.style.display = 'none';
+        } else {
+            ifscGroup.style.display = 'none';
+            swiftGroup.style.display = 'block';
+        }
+    }
+
+    generateBank() {
+        const region = document.getElementById('bank-region').value;
+        const bankName = document.getElementById('bank-name').value;
+        const beneficiary = document.getElementById('bank-beneficiary').value.trim();
+        const account = document.getElementById('bank-account').value.trim();
+        const amount = document.getElementById('bank-amount').value.trim();
+
+        if (!beneficiary || !account) return '';
+
+        let bankData = '';
+
+        if (region === 'india') {
+            const ifsc = document.getElementById('bank-ifsc').value.trim().toUpperCase();
+            // Indian bank transfer format
+            bankData = `Bank Transfer\nBeneficiary: ${beneficiary}\nAccount: ${account}\nIFSC: ${ifsc}`;
+            if (bankName) bankData += `\nBank: ${bankName.toUpperCase()}`;
+            if (amount) bankData += `\nAmount: ₹${amount}`;
+        } else {
+            const swift = document.getElementById('bank-swift').value.trim().toUpperCase();
+            // International SWIFT format
+            bankData = `International Transfer\nBeneficiary: ${beneficiary}\nAccount: ${account}\nSWIFT/BIC: ${swift}`;
+            if (bankName) bankData += `\nBank: ${bankName.toUpperCase()}`;
+            if (amount) bankData += `\nAmount: ${amount}`;
+        }
+
+        console.log('Generated Bank:', bankData);
+        return bankData;
+    }
+
+    generateEvent() {
+        const title = document.getElementById('event-title').value.trim();
+        const location = document.getElementById('event-location').value.trim();
+        const startDate = document.getElementById('event-start-date').value;
+        const startTime = document.getElementById('event-start-time').value;
+        const endDate = document.getElementById('event-end-date').value;
+        const endTime = document.getElementById('event-end-time').value;
+        const description = document.getElementById('event-description').value.trim();
+
+        if (!title || !startDate || !startTime || !endDate || !endTime) return '';
+
+        // Convert to iCalendar format
+        const formatDateTime = (date, time) => {
+            return date.replace(/-/g, '') + 'T' + time.replace(/:/g, '') + '00';
+        };
+
+        // iCalendar VEVENT format
+        let event = 'BEGIN:VCALENDAR\r\n';
+        event += 'VERSION:2.0\r\n';
+        event += 'BEGIN:VEVENT\r\n';
+        event += `DTSTART:${formatDateTime(startDate, startTime)}\r\n`;
+        event += `DTEND:${formatDateTime(endDate, endTime)}\r\n`;
+        event += `SUMMARY:${title}\r\n`;
+
+        if (location) {
+            event += `LOCATION:${location}\r\n`;
+        }
+        if (description) {
+            event += `DESCRIPTION:${description}\r\n`;
+        }
+
+        event += 'END:VEVENT\r\n';
+        event += 'END:VCALENDAR';
+
+        console.log('Generated Event:', event);
+        return event;
+    }
+
+    updateCryptoFields() {
+        const coin = document.getElementById('crypto-coin').value;
+        const infoEl = document.getElementById('crypto-info');
+
+        const cryptoInfo = {
+            bitcoin: { icon: 'fab fa-bitcoin', name: 'Bitcoin Network' },
+            ethereum: { icon: 'fab fa-ethereum', name: 'Ethereum Network' },
+            litecoin: { icon: 'fas fa-coins', name: 'Litecoin Network' },
+            dogecoin: { icon: 'fas fa-dog', name: 'Dogecoin Network' },
+            ripple: { icon: 'fas fa-water', name: 'Ripple Network' },
+            cardano: { icon: 'fas fa-circle-nodes', name: 'Cardano Network' },
+            solana: { icon: 'fas fa-sun', name: 'Solana Network' },
+            polygon: { icon: 'fas fa-hexagon', name: 'Polygon Network' },
+            usdt: { icon: 'fas fa-dollar-sign', name: 'Tether (ERC-20/TRC-20)' },
+            usdc: { icon: 'fas fa-dollar-sign', name: 'USD Coin (ERC-20)' }
+        };
+
+        const info = cryptoInfo[coin] || cryptoInfo.bitcoin;
+        infoEl.innerHTML = `<i class="${info.icon}"></i><span>${info.name}</span>`;
+    }
+
+    generateCrypto() {
+        const coin = document.getElementById('crypto-coin').value;
+        const address = document.getElementById('crypto-address').value.trim();
+        const amount = document.getElementById('crypto-amount').value.trim();
+        const label = document.getElementById('crypto-label').value.trim();
+
+        if (!address) return '';
+
+        // Crypto payment URI formats (BIP21 standard for Bitcoin, EIP-681 for Ethereum)
+        const prefixes = {
+            bitcoin: 'bitcoin',
+            ethereum: 'ethereum',
+            litecoin: 'litecoin',
+            dogecoin: 'dogecoin',
+            ripple: 'ripple',
+            cardano: 'cardano',
+            solana: 'solana',
+            polygon: 'polygon',
+            usdt: 'ethereum', // USDT typically on ETH
+            usdc: 'ethereum'  // USDC typically on ETH
+        };
+
+        let uri = `${prefixes[coin] || coin}:${address}`;
+        const params = [];
+
+        if (amount) {
+            params.push(`amount=${amount}`);
+        }
+        if (label) {
+            params.push(`label=${encodeURIComponent(label)}`);
+        }
+
+        if (params.length > 0) {
+            uri += '?' + params.join('&');
+        }
+
+        console.log('Generated Crypto:', uri);
+        return uri;
+    }
+
+    generateBarcode() {
+        const data = document.getElementById('barcode-data').value.trim();
+        if (!data) return '';
+
+        // Return raw data - barcode generation handled separately
+        this.barcodeFormat = document.getElementById('barcode-format').value;
+        this.barcodeHeight = parseInt(document.getElementById('barcode-height').value) || 100;
+        this.barcodeText = document.getElementById('barcode-text').value.trim();
+
+        console.log('Generated Barcode data:', data);
+        return data;
+    }
+
     // History Management
     loadHistory() {
         try {
@@ -579,6 +1294,25 @@ class QRGeneratorPro {
             case 'wifi':
                 const ssidMatch = this.qrData.match(/S:([^;]+)/);
                 return ssidMatch ? ssidMatch[1] : 'WiFi Network';
+            case 'location':
+                const coords = this.qrData.replace('geo:', '').split('?')[0];
+                return `📍 ${coords}`;
+            case 'sms':
+                return this.qrData.replace('smsto:', '').split(':')[0];
+            case 'upi':
+                const upiMatch = this.qrData.match(/pa=([^&]+)/);
+                return upiMatch ? decodeURIComponent(upiMatch[1]) : 'UPI Payment';
+            case 'bank':
+                const beneficiaryMatch = this.qrData.match(/Beneficiary: ([^\n]+)/);
+                return beneficiaryMatch ? beneficiaryMatch[1] : 'Bank Transfer';
+            case 'event':
+                const summaryMatch = this.qrData.match(/SUMMARY:([^\r\n]+)/);
+                return summaryMatch ? summaryMatch[1] : 'Calendar Event';
+            case 'crypto':
+                const cryptoAddr = this.qrData.split(':')[1]?.split('?')[0];
+                return cryptoAddr ? cryptoAddr.substring(0, 20) + '...' : 'Crypto Address';
+            case 'barcode':
+                return `Barcode: ${this.qrData.substring(0, 20)}`;
             default:
                 return this.qrData.length > 30 ? this.qrData.substring(0, 30) + '...' : this.qrData;
         }
@@ -597,10 +1331,7 @@ class QRGeneratorPro {
 
         this.history.unshift(historyItem);
 
-        // Keep only last 20 items (increased from 10)
-        if (this.history.length > 20) {
-            this.history = this.history.slice(0, 20);
-        }
+        // No limit on history items - store all
 
         try {
             localStorage.setItem('qr-generator-history', JSON.stringify(this.history));
@@ -640,7 +1371,7 @@ class QRGeneratorPro {
             const historyItemEl = document.createElement('div');
             historyItemEl.className = 'history-panel-item';
             historyItemEl.style.transform = 'translateZ(0)'; // Force hardware acceleration
-            
+
             historyItemEl.addEventListener('click', () => {
                 this.loadFromHistory(item);
                 this.toggleHistoryPanel();
@@ -969,6 +1700,27 @@ class QRGeneratorPro {
             case 'wifi':
                 return this.qrData.startsWith('WIFI:');
 
+            case 'location':
+                return this.qrData.startsWith('geo:');
+
+            case 'sms':
+                return this.qrData.startsWith('smsto:');
+
+            case 'upi':
+                return this.qrData.startsWith('upi://');
+
+            case 'bank':
+                return this.qrData.includes('Beneficiary:');
+
+            case 'event':
+                return this.qrData.includes('BEGIN:VCALENDAR');
+
+            case 'crypto':
+                return this.qrData.includes(':') && this.qrData.length > 10;
+
+            case 'barcode':
+                return this.qrData.length > 0;
+
             default:
                 return this.qrData.length > 0;
         }
@@ -1077,11 +1829,15 @@ class QRGeneratorPro {
         // Wait for page transition to complete
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Show smooth QR building animation
-        await this.showSmoothBuildingAnimation();
+        // Show appropriate animation based on type
+        if (this.selectedType === 'barcode') {
+            await this.showBarcodeAnimation();
+        } else {
+            await this.showSmoothBuildingAnimation();
+        }
 
         try {
-            // Animation completed, QR code is already built
+            // Animation completed, code is ready to be built
 
             await this.createQRCode();
             await this.showSuccessAnimation();
@@ -1089,8 +1845,8 @@ class QRGeneratorPro {
             // Save to history after successful generation
             this.saveToHistory(this.selectedType, this.qrData, this.getDisplayText());
         } catch (error) {
-            console.error('QR generation error:', error);
-            this.showError(`Failed to generate QR code: ${error.message}`);
+            console.error('Generation error:', error);
+            this.showError(`Failed to generate ${this.selectedType === 'barcode' ? 'barcode' : 'QR code'}: ${error.message}`);
         } finally {
             this.isGenerating = false;
         }
@@ -1116,6 +1872,11 @@ class QRGeneratorPro {
 
         const size = this.customization.size;
 
+        // Handle barcode generation separately
+        if (this.selectedType === 'barcode') {
+            return this.createBarcode(canvas);
+        }
+
         // Clear any existing content
         canvas.width = size;
         canvas.height = size;
@@ -1136,10 +1897,7 @@ class QRGeneratorPro {
             // Generate QR code using available method
             await this.generateQRWithMethod(canvas, this.qrData, options);
 
-            // Apply custom pattern if not square
-            if (this.customization.pattern !== 'square') {
-                await this.applyCustomPattern(canvas);
-            }
+
 
             // Add logo if present
             if (this.customization.logo) {
@@ -1150,6 +1908,65 @@ class QRGeneratorPro {
             console.error('QR generation failed:', error);
             throw new Error(`QR generation failed: ${error.message}`);
         }
+    }
+
+    async createBarcode(canvas) {
+        return new Promise((resolve, reject) => {
+            try {
+                // Check if JsBarcode is available
+                if (typeof JsBarcode === 'undefined') {
+                    throw new Error('JsBarcode library not loaded');
+                }
+
+                const format = this.barcodeFormat || 'CODE128';
+                const height = this.barcodeHeight || 100;
+                const displayText = this.barcodeText || this.qrData;
+
+                // Configure barcode options
+                const options = {
+                    format: format,
+                    width: 2,
+                    height: height,
+                    displayValue: true,
+                    text: displayText,
+                    fontOptions: "bold",
+                    font: "Arial",
+                    fontSize: 16,
+                    textAlign: "center",
+                    textPosition: "bottom",
+                    textMargin: 5,
+                    background: this.customization.bgColor,
+                    lineColor: this.customization.fgColor,
+                    margin: 10
+                };
+
+                // Generate barcode
+                JsBarcode(canvas, this.qrData, options);
+
+                // Clear animation and show barcode
+                const container = document.querySelector('.qr-container');
+                if (container) {
+                    container.innerHTML = '';
+                    canvas.style.display = 'block';
+                    canvas.style.maxWidth = '100%';
+                    canvas.style.height = 'auto';
+                    canvas.style.borderRadius = '12px';
+                    canvas.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.15)';
+                    container.appendChild(canvas);
+                }
+
+                console.log('Barcode generated successfully:', {
+                    format: format,
+                    data: this.qrData,
+                    height: height
+                });
+
+                resolve();
+            } catch (error) {
+                console.error('Barcode generation failed:', error);
+                reject(new Error(`Barcode generation failed: ${error.message}`));
+            }
+        });
     }
 
     async generateQRWithMethod(canvas, text, options) {
@@ -1471,65 +2288,7 @@ class QRGeneratorPro {
         return pattern === 0;
     }
 
-    async applyCustomPattern(canvas) {
-        return new Promise((resolve) => {
-            const ctx = canvas.getContext('2d');
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
 
-            // Create a new canvas for pattern application
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
-
-            // Copy original to temp canvas
-            tempCtx.putImageData(imageData, 0, 0);
-
-            // Clear original canvas
-            ctx.fillStyle = this.customization.bgColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Apply pattern based on original pixels
-            const moduleSize = Math.floor(canvas.width / 25); // Approximate module size
-
-            for (let y = 0; y < canvas.height; y += moduleSize) {
-                for (let x = 0; x < canvas.width; x += moduleSize) {
-                    // Check if this area should be dark
-                    const pixelIndex = (y * canvas.width + x) * 4;
-                    const isDark = data[pixelIndex] < 128; // Check red channel
-
-                    if (isDark) {
-                        ctx.fillStyle = this.customization.fgColor;
-                        this.drawModulePattern(ctx, x, y, moduleSize);
-                    }
-                }
-            }
-
-            resolve();
-        });
-    }
-
-    drawModulePattern(ctx, x, y, size) {
-        const padding = size * 0.1;
-        const actualSize = size - (padding * 2);
-
-        // Only square pattern supported
-        ctx.fillRect(x + padding, y + padding, actualSize, actualSize);
-    }
-
-    roundRect(ctx, x, y, width, height, radius) {
-        if (width < 2 * radius) radius = width / 2;
-        if (height < 2 * radius) radius = height / 2;
-
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.arcTo(x + width, y, x + width, y + height, radius);
-        ctx.arcTo(x + width, y + height, x, y + height, radius);
-        ctx.arcTo(x, y + height, x, y, radius);
-        ctx.arcTo(x, y, x + width, y, radius);
-        ctx.closePath();
-    }
 
     async addLogo(canvas) {
         if (!this.customization.logo) {
@@ -1652,47 +2411,259 @@ class QRGeneratorPro {
             const tempCanvas = document.createElement('canvas');
             await this.generateQRToCanvas(tempCanvas);
 
-            // Create smooth building animation
+            // Create assembling animation
             container.innerHTML = `
-                <div class="qr-smooth-animation">
-                    <div class="building-header">
-                        <div class="building-title">
-                            <i class="fas fa-qrcode"></i>
-                            <span>Generating QR Code</span>
-                        </div>
-                        <div class="building-progress">
-                            <div class="progress-text">Creating your QR code...</div>
-                        </div>
+                <div class="qr-assemble-animation">
+                    <div class="assemble-grid"></div>
+                    <div class="assemble-pieces">
+                        <!-- JS will inject pieces -->
                     </div>
-                    
-                    <div class="qr-preview-container">
-                        <div class="qr-building-overlay">
-                            <div class="building-waves">
-                                <div class="wave wave-1"></div>
-                                <div class="wave wave-2"></div>
-                                <div class="wave wave-3"></div>
-                            </div>
-                            <div class="building-spinner">
-                                <div class="spinner-ring"></div>
-                                <div class="spinner-center">
-                                    <i class="fas fa-qrcode"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <canvas id="qr-preview" style="opacity: 0; transform: scale(0.8);"></canvas>
-                    </div>
-                    
-                    <div class="building-status">
-                        <div class="status-text" id="building-status">Initializing...</div>
-                    </div>
+                    <div class="assemble-status">ASSEMBLING MODULES</div>
                 </div>
                 <canvas id="qr-canvas" style="display: none;"></canvas>
             `;
 
-            // Start the smooth animation
-            await this.animateSmoothBuilding(tempCanvas);
+            // Run the animation then reveal
+            await this.animateAssembleBuild(tempCanvas);
             resolve();
         });
+    }
+
+    async animateAssembleBuild(tempCanvas) {
+        const piecesContainer = document.querySelector('.assemble-pieces');
+        if (piecesContainer) {
+            // Create flying pieces
+            for (let i = 0; i < 20; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'qr-piece';
+                // Random starting positions outside center
+                const startX = (Math.random() - 0.5) * 400;
+                const startY = (Math.random() - 0.5) * 400;
+                piece.style.setProperty('--tx', `${startX}px`);
+                piece.style.setProperty('--ty', `${startY}px`);
+                piece.style.animationDelay = `${Math.random() * 0.5}s`;
+                piecesContainer.appendChild(piece);
+            }
+        }
+
+        // Wait for animation
+        await new Promise(r => setTimeout(r, 1500));
+
+        // Implode animation (pieces merge)
+        const animationEl = document.querySelector('.qr-assemble-animation');
+        if (animationEl) {
+            animationEl.style.transform = 'scale(0.8)';
+            animationEl.style.opacity = '0';
+        }
+
+        await new Promise(r => setTimeout(r, 600));
+
+        // Reveal canvas
+        const container = document.querySelector('.qr-container');
+        if (container && tempCanvas) {
+            container.innerHTML = '';
+            const canvas = document.createElement('canvas');
+            canvas.id = 'qr-canvas';
+            canvas.width = tempCanvas.width;
+            canvas.height = tempCanvas.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(tempCanvas, 0, 0);
+
+            canvas.style.maxWidth = '100%';
+            canvas.style.height = 'auto';
+            canvas.style.borderRadius = '16px';
+            canvas.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.15)';
+            canvas.style.opacity = '0';
+            canvas.style.transform = 'scale(0.8)';
+            canvas.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+            container.appendChild(canvas);
+
+            // Trigger reveal
+            await new Promise(r => setTimeout(r, 50));
+            canvas.style.opacity = '1';
+            canvas.style.transform = 'scale(1)';
+
+            // Add particles effect on reveal
+            this.createParticles(container);
+        }
+    }
+
+    createParticles(container) {
+        for (let i = 0; i < 15; i++) {
+            const p = document.createElement('div');
+            p.className = 'reveal-particle';
+            p.style.left = '50%';
+            p.style.top = '50%';
+            p.style.setProperty('--x', (Math.random() - 0.5) * 200 + 'px');
+            p.style.setProperty('--y', (Math.random() - 0.5) * 200 + 'px');
+            container.appendChild(p);
+            setTimeout(() => p.remove(), 1000);
+        }
+    }
+
+
+    async animateHighEndBuilding(tempCanvas) {
+        const previewCanvas = document.getElementById('qr-preview');
+        const progressFill = document.getElementById('build-progress');
+        const progressPercent = document.getElementById('progress-percent');
+        const statusEl = document.getElementById('build-status');
+
+        const steps = [
+            { id: 'step-1', status: 'Encoding data...', progress: 25 },
+            { id: 'step-2', status: 'Building matrix...', progress: 50 },
+            { id: 'step-3', status: 'Applying styles...', progress: 75 },
+            { id: 'step-4', status: 'Finalizing...', progress: 100 }
+        ];
+
+        // Copy QR to preview canvas (hidden initially)
+        if (previewCanvas && tempCanvas) {
+            previewCanvas.width = tempCanvas.width;
+            previewCanvas.height = tempCanvas.height;
+            const ctx = previewCanvas.getContext('2d');
+            ctx.drawImage(tempCanvas, 0, 0);
+        }
+
+        // Animate through steps
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+
+            // Update status
+            if (statusEl) statusEl.textContent = step.status;
+
+            // Activate step
+            const stepEl = document.getElementById(step.id);
+            if (stepEl) {
+                stepEl.classList.add('active');
+                if (i > 0) {
+                    const prevStep = document.getElementById(steps[i - 1].id);
+                    if (prevStep) prevStep.classList.add('completed');
+                }
+            }
+
+            // Animate progress bar
+            await this.animateProgress(progressFill, progressPercent,
+                i === 0 ? 0 : steps[i - 1].progress,
+                step.progress,
+                400
+            );
+
+            // Wait between steps
+            await new Promise(r => setTimeout(r, 200));
+        }
+
+        // Final reveal animation
+        if (previewCanvas) {
+            previewCanvas.style.opacity = '1';
+            previewCanvas.style.transform = 'scale(1)';
+        }
+
+        // Mark all complete
+        const allSteps = document.querySelectorAll('.build-steps .step');
+        allSteps.forEach(s => s.classList.add('completed'));
+
+        if (statusEl) statusEl.textContent = 'Complete!';
+
+        await new Promise(r => setTimeout(r, 300));
+    }
+
+    async animateProgress(fillEl, percentEl, from, to, duration) {
+        const startTime = Date.now();
+
+        return new Promise(resolve => {
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+                const current = from + (to - from) * eased;
+
+                if (fillEl) fillEl.style.width = `${current}%`;
+                if (percentEl) percentEl.textContent = `${Math.round(current)}%`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    resolve();
+                }
+            };
+            animate();
+        });
+    }
+
+    async showBarcodeAnimation() {
+        return new Promise(async (resolve) => {
+            const container = document.querySelector('.qr-container');
+
+            // Create barcode animation HTML
+            container.innerHTML = `
+                <div class="barcode-animation">
+                    <div class="barcode-header">
+                        <div class="barcode-title">
+                            <i class="fas fa-barcode"></i>
+                            <span>Generating Barcode</span>
+                        </div>
+                        <div class="barcode-progress-text">Creating your barcode...</div>
+                    </div>
+                    
+                    <div class="barcode-preview-area">
+                        <div class="barcode-bars-container">
+                            ${this.generateAnimatedBars(40)}
+                        </div>
+                        <div class="barcode-scan-line"></div>
+                    </div>
+                    
+                    <div class="barcode-status" id="barcode-status">Initializing...</div>
+                </div>
+                <canvas id="qr-canvas" style="display: none;"></canvas>
+            `;
+
+            // Run the barcode animation
+            await this.animateBarcodeBuilding();
+            resolve();
+        });
+    }
+
+    generateAnimatedBars(count) {
+        let bars = '';
+        for (let i = 0; i < count; i++) {
+            const width = Math.random() > 0.5 ? 4 : 2;
+            const delay = i * 30;
+            bars += `<div class="animated-bar" style="width: ${width}px; animation-delay: ${delay}ms;"></div>`;
+        }
+        return bars;
+    }
+
+    async animateBarcodeBuilding() {
+        const statusEl = document.getElementById('barcode-status');
+        const bars = document.querySelectorAll('.animated-bar');
+
+        const statuses = [
+            { text: 'Encoding data...', delay: 300 },
+            { text: 'Generating bars...', delay: 500 },
+            { text: 'Applying format...', delay: 400 },
+            { text: 'Finalizing barcode...', delay: 300 }
+        ];
+
+        // Animate bars appearing
+        bars.forEach((bar, index) => {
+            setTimeout(() => {
+                bar.classList.add('visible');
+            }, index * 25);
+        });
+
+        // Update status messages
+        let totalDelay = 0;
+        for (const status of statuses) {
+            await new Promise(resolve => setTimeout(resolve, status.delay));
+            if (statusEl) statusEl.textContent = status.text;
+            totalDelay += status.delay;
+        }
+
+        // Wait for bars animation to complete
+        await new Promise(resolve => setTimeout(resolve, Math.max(0, 1200 - totalDelay)));
+
+        if (statusEl) statusEl.textContent = 'Complete!';
+        await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     async generateQRToCanvas(canvas) {
@@ -2050,23 +3021,3 @@ document.addEventListener('DOMContentLoaded', () => {
     window.qrApp = new QRGeneratorPro();
 });
 
-// Global functions for HTML onclick handlers
-function goToPage(pageNumber) {
-    window.qrApp.goToPage(pageNumber);
-}
-
-function generateQR() {
-    window.qrApp.generateQR();
-}
-
-function downloadQR() {
-    window.qrApp.downloadQR();
-}
-
-function shareQR() {
-    window.qrApp.shareQR();
-}
-
-function removeLogo() {
-    window.qrApp.removeLogo();
-}
