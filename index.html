@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Primary QR Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- JsBarcode Library for Barcode Generation -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <!-- Fallback QR Generator -->
     <script src="qr-generator.js"></script>
 </head>
@@ -130,6 +132,62 @@
                         <h3>WiFi</h3>
                         <p>WiFi credentials</p>
                     </div>
+
+                    <div class="type-card" data-type="location">
+                        <div class="type-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h3>Location</h3>
+                        <p>GPS coordinates</p>
+                    </div>
+
+                    <div class="type-card" data-type="sms">
+                        <div class="type-icon">
+                            <i class="fas fa-sms"></i>
+                        </div>
+                        <h3>SMS</h3>
+                        <p>Text message</p>
+                    </div>
+
+                    <div class="type-card" data-type="upi">
+                        <div class="type-icon">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <h3>UPI Payment</h3>
+                        <p>GPay, Paytm, PhonePe</p>
+                    </div>
+
+                    <div class="type-card" data-type="social">
+                        <div class="type-icon">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                        <h3>Social Media</h3>
+                        <p>Insta, FB, LinkedIn...</p>
+                    </div>
+
+                    <div class="type-card" data-type="event">
+                        <div class="type-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h3>Event/Booking</h3>
+                        <p>Calendar event</p>
+                    </div>
+
+                    <div class="type-card" data-type="crypto">
+                        <div class="type-icon">
+                            <i class="fab fa-bitcoin"></i>
+                        </div>
+                        <h3>Crypto Payment</h3>
+                        <p>BTC, ETH, and more</p>
+                    </div>
+
+                    <div class="type-card" data-type="barcode">
+                        <div class="type-icon">
+                            <i class="fas fa-barcode"></i>
+                        </div>
+                        <h3>Barcode</h3>
+                        <p>Product barcode</p>
+                    </div>
                 </div>
 
             </div>
@@ -150,8 +208,8 @@
                     <!-- Dynamic content will be inserted here -->
                 </div>
 
-                <button class="next-btn" onclick="goToPage(3)">
-                    <span>Customize QR</span>
+                <button class="next-btn" id="customize-btn" onclick="goToPage(3)">
+                    <span id="customize-btn-text">Customize QR</span>
                     <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -164,22 +222,14 @@
                     <button class="back-btn" onclick="goToPage(2)">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <h1>Customize QR Code</h1>
-                    <p>Choose style and appearance</p>
+                    <h1 id="customize-title">Customize QR Code</h1>
+                    <p id="customize-subtitle">Choose style and appearance</p>
                 </div>
 
                 <div class="customization-section">
-                    <div class="option-group">
-                        <label>QR Pattern Style</label>
-                        <div class="pattern-options">
-                            <div class="pattern-option active" data-pattern="square">
-                                <div class="pattern-preview square-pattern"></div>
-                                <span>Standard</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="option-group">
+
+                    <div class="option-group" id="color-option-group">
                         <label>Colors</label>
                         <div class="color-options">
                             <div class="color-row">
@@ -193,7 +243,7 @@
                         </div>
                     </div>
 
-                    <div class="option-group">
+                    <div class="option-group" id="logo-option-group">
                         <label>Center Logo</label>
                         <div class="logo-upload">
                             <input type="file" id="logo-upload" accept="image/*" style="display: none;">
@@ -210,18 +260,18 @@
                         </div>
                     </div>
 
-                    <div class="option-group">
+                    <div class="option-group" id="size-option-group">
                         <label>Size</label>
                         <div class="size-slider">
-                            <input type="range" id="size-slider" min="200" max="800" value="400">
+                            <input type="range" id="size-slider" min="200" max="2000" value="400">
                             <span id="size-value">400px</span>
                         </div>
                     </div>
                 </div>
 
-                <button class="generate-btn" onclick="generateQR()">
+                <button class="generate-btn" id="generate-btn" onclick="generateQR()">
                     <i class="fas fa-magic"></i>
-                    <span>Generate QR Code</span>
+                    <span id="generate-btn-text">Generate QR Code</span>
                 </button>
             </div>
         </div>
@@ -233,8 +283,8 @@
                     <button class="back-btn" onclick="goToPage(3)">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <h1>Your QR Code</h1>
-                    <p>Ready to download and share</p>
+                    <h1 id="result-title">Your QR Code</h1>
+                    <p id="result-subtitle">Ready to download and share</p>
                 </div>
 
                 <div class="qr-result">
@@ -252,9 +302,9 @@
                             <span>Share</span>
                         </button>
 
-                        <button class="action-btn" onclick="goToPage(1)">
+                        <button class="action-btn" id="new-code-btn" onclick="goToPage(1)">
                             <i class="fas fa-plus"></i>
-                            <span>New QR</span>
+                            <span id="new-code-btn-text">New QR</span>
                         </button>
                     </div>
                 </div>
