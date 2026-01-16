@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Primary QR Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- JsBarcode Library for Barcode Generation -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <!-- Fallback QR Generator -->
+    <script src="qr-generator.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sliding History Panel -->
+        <div class="history-panel" id="history-panel">
+            <div class="history-panel-content">
+                <div class="history-panel-header">
+                    <div class="history-panel-title">
+                        <i class="fas fa-history"></i>
+                        <span>Recent QR Codes</span>
+                        <span class="history-count" id="history-count">0</span>
+                    </div>
+                    <div class="history-panel-actions">
+                        <button class="history-panel-btn" onclick="qrGenerator.clearHistory()" title="Clear All">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="history-panel-close" onclick="qrGenerator.toggleHistoryPanel()" title="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="history-panel-list" id="history-panel-list">
+                    <!-- History items will be inserted here -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <canvas id="header-qr" width="32" height="32"
+                        title="Scan to visit coralgenz.wordpress.com"></canvas>
+                    <span>GenZ QR</span>
+                    <!-- History Toggle Button - moved next to logo -->
+                    <button class="history-toggle-btn-header" id="history-toggle-btn"
+                        onclick="qrGenerator.toggleHistoryPanel()" title="View History">
+                        <span class="history-btn-text">View History</span>
+                        <span class="history-toggle-count" id="history-toggle-count">0</span>
+                    </button>
+                </div>
+                <div class="header-info">
+                    <div class="page-indicator" id="page-indicator">
+                        <span id="current-step">Choose Type</span>
+                        <div class="step-counter">
+                            <span id="step-number">1</span>
+                            <span>/</span>
+                            <span>4</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page 1: Type Selection -->
+        <div class="page active" id="page-1">
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>Choose QR Type</h1>
+                    <p>Select what you want to encode in your QR code</p>
+                    <div class="security-badge">
+                        <i class="fas fa-lock"></i>
+                        <span>Secure & Private - No data stored</span>
+                    </div>
+                </div>
+
+                <div class="type-grid">
+                    <div class="type-card" data-type="text">
+                        <div class="type-icon">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <h3>Text</h3>
+                        <p>Plain text or message</p>
+                    </div>
+
+                    <div class="type-card" data-type="url">
+                        <div class="type-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <h3>Website</h3>
+                        <p>URL or web link</p>
+                    </div>
+
+                    <div class="type-card" data-type="contact">
+                        <div class="type-icon">
+                            <i class="fas fa-address-card"></i>
+                        </div>
+                        <h3>Contact</h3>
+                        <p>vCard contact info</p>
+                    </div>
+
+                    <div class="type-card" data-type="email">
+                        <div class="type-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <h3>Email</h3>
+                        <p>Email address</p>
+                    </div>
+
+                    <div class="type-card" data-type="phone">
+                        <div class="type-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <h3>Phone</h3>
+                        <p>Phone number</p>
+                    </div>
+
+                    <div class="type-card" data-type="wifi">
+                        <div class="type-icon">
+                            <i class="fas fa-wifi"></i>
+                        </div>
+                        <h3>WiFi</h3>
+                        <p>WiFi credentials</p>
+                    </div>
+
+                    <div class="type-card" data-type="location">
+                        <div class="type-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h3>Location</h3>
+                        <p>GPS coordinates</p>
+                    </div>
+
+                    <div class="type-card" data-type="sms">
+                        <div class="type-icon">
+                            <i class="fas fa-sms"></i>
+                        </div>
+                        <h3>SMS</h3>
+                        <p>Text message</p>
+                    </div>
+
+                    <div class="type-card" data-type="upi">
+                        <div class="type-icon">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <h3>UPI Payment</h3>
+                        <p>GPay, Paytm, PhonePe</p>
+                    </div>
+
+                    <div class="type-card" data-type="social">
+                        <div class="type-icon">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                        <h3>Social Media</h3>
+                        <p>Insta, FB, LinkedIn...</p>
+                    </div>
+
+                    <div class="type-card" data-type="event">
+                        <div class="type-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h3>Event/Booking</h3>
+                        <p>Calendar event</p>
+                    </div>
+
+                    <div class="type-card" data-type="crypto">
+                        <div class="type-icon">
+                            <i class="fab fa-bitcoin"></i>
+                        </div>
+                        <h3>Crypto Payment</h3>
+                        <p>BTC, ETH, and more</p>
+                    </div>
+
+                    <div class="type-card" data-type="barcode">
+                        <div class="type-icon">
+                            <i class="fas fa-barcode"></i>
+                        </div>
+                        <h3>Barcode</h3>
+                        <p>Product barcode</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Page 2: Data Input -->
+        <div class="page" id="page-2">
+            <div class="page-content">
+                <div class="page-header">
+                    <button class="back-btn" onclick="goToPage(1)">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 id="input-title">Enter Data</h1>
+                    <p id="input-subtitle">Fill in the information below</p>
+                </div>
+
+                <div class="input-container" id="input-container">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+
+                <button class="next-btn" id="customize-btn" onclick="goToPage(3)">
+                    <span id="customize-btn-text">Customize QR</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 3: Customization -->
+        <div class="page" id="page-3">
+            <div class="page-content">
+                <div class="page-header">
+                    <button class="back-btn" onclick="goToPage(2)">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 id="customize-title">Customize QR Code</h1>
+                    <p id="customize-subtitle">Choose style and appearance</p>
+                </div>
+
+                <div class="customization-section">
+
+
+                    <div class="option-group" id="color-option-group">
+                        <label>Colors</label>
+                        <div class="color-options">
+                            <div class="color-row">
+                                <span>Foreground:</span>
+                                <input type="color" id="fg-color" value="#000000">
+                            </div>
+                            <div class="color-row">
+                                <span>Background:</span>
+                                <input type="color" id="bg-color" value="#ffffff">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-group" id="logo-option-group">
+                        <label>Center Logo</label>
+                        <div class="logo-upload">
+                            <input type="file" id="logo-upload" accept="image/*" style="display: none;">
+                            <button class="upload-btn" onclick="document.getElementById('logo-upload').click()">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload Logo</span>
+                            </button>
+                            <div class="logo-preview" id="logo-preview" style="display: none;">
+                                <img id="logo-img" src="" alt="Logo">
+                                <button class="remove-logo" onclick="removeLogo()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-group" id="size-option-group">
+                        <label>Quality</label>
+                        <div class="size-slider">
+                            <input type="range" id="size-slider" min="500" max="3000" value="1000">
+                            <span id="size-value">1000px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generate-btn" onclick="generateQR()">
+                    <i class="fas fa-magic"></i>
+                    <span id="generate-btn-text">Generate QR Code</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 4: Result -->
+        <div class="page" id="page-4">
+            <div class="page-content">
+                <div class="page-header">
+                    <button class="back-btn" onclick="goToPage(3)">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 id="result-title">Your QR Code</h1>
+                    <p id="result-subtitle">Ready to download and share</p>
+                </div>
+
+                <div class="qr-result">
+                    <div class="qr-container">
+                        <canvas id="qr-canvas"></canvas>
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="action-btn primary" onclick="downloadQR()">
+                            <i class="fas fa-download"></i>
+                            <span>Download</span>
+                        </button>
+                        <button class="action-btn" onclick="shareQR()" id="share-btn">
+                            <i class="fas fa-share"></i>
+                            <span>Share</span>
+                        </button>
+
+                        <button class="action-btn" id="new-code-btn" onclick="goToPage(1)">
+                            <i class="fas fa-plus"></i>
+                            <span id="new-code-btn-text">New QR</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Global functions for button interactions
+        let qrGenerator;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            qrGenerator = new QRGeneratorPro();
+        });
+
+        function goToPage(page) {
+            if (qrGenerator) {
+                qrGenerator.goToPage(page);
+            }
+        }
+
+        function generateQR() {
+            if (qrGenerator) {
+                qrGenerator.generateQR();
+            }
+        }
+
+        function downloadQR() {
+            if (qrGenerator) {
+                qrGenerator.downloadQR();
+            }
+        }
+
+        function shareQR() {
+            if (qrGenerator) {
+                qrGenerator.shareQR();
+            }
+        }
+
+        function removeLogo() {
+            if (qrGenerator) {
+                qrGenerator.removeLogo();
+            }
+        }
+
+        function toggleHistoryPanel() {
+            if (qrGenerator) {
+                qrGenerator.toggleHistoryPanel();
+            }
+        }
+    </script>
+</body>
+
+</html>
